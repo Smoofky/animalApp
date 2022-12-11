@@ -306,7 +306,7 @@ class _WalkScreen extends State<WalkScreen> {
       double startLat, double startLng, double endLat, double endLng) async {
     polylinePoints = PolylinePoints();
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        'AIzaSyDDyBb0N9_jthBS99PRJcT6CjFV2TI9J5E',
+        'xxxx',
         PointLatLng(startLat, startLng),
         PointLatLng(endLat, endLng),
         travelMode: TravelMode.bicycling,
