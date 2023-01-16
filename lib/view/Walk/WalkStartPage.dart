@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:animal_app/main.dart';
+import 'package:animal_app/utils/Network.dart';
 import 'package:animal_app/view/Walk/WalkAdjustRoute.dart';
-import 'package:animal_app/widget/ScaffoldClass.dart';
+import 'package:animal_app/utils/ScaffoldClass.dart';
 import 'package:flutter/material.dart';
 import 'package:slider_button/slider_button.dart';
 import '../../model/Animal.dart';
@@ -8,52 +12,54 @@ import 'package:permission_handler/permission_handler.dart';
 
 class WalkStartPage extends StatefulWidget {
   const WalkStartPage({Key? key}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() => _WalkStartPage();
 }
 
 class _WalkStartPage extends State<WalkStartPage> {
+  late Future<List<Animal>> future;
   Future<void> requestLocationPermission() async {
     final serviceStatusLocation = await Permission.locationWhenInUse.isGranted;
     bool isLocation = serviceStatusLocation == ServiceStatus.enabled;
     final status = await Permission.locationWhenInUse.request();
     if (status == PermissionStatus.granted) {
-      print('Permission Granted');
+      //print('Permission Granted');
     } else if (status == PermissionStatus.denied) {
       requestLocationPermission();
-      print('Permission denied');
+      //print('Permission denied');
     } else if (status == PermissionStatus.permanentlyDenied) {
-      print('Permission Permanently Denied');
+      //print('Permission Permanently Denied');
       await openAppSettings();
     }
+  }
+
+  Future<List<Animal>> fetchAnimals(int userId) async {
+    String url = "$ServerIP/users/$userId/animals";
+    NetworkUtil network = NetworkUtil();
+    final result = await (network.get(url));
+    return parseAnimals(
+        json.encode(result['Animals with user_id: ${user.id!}']));
   }
 
   @override
   void initState() {
     requestLocationPermission();
+    future = fetchAnimals(user.id!).then((value) {
+      wybrany = List<bool>.generate(value.length, (index) => false);
+      return fetchAnimals(user.id!);
+    });
+    print('INIT STATE WYBRANY => $wybrany');
+
     super.initState();
   }
 
   // biezremy data z db o spacerach
   bool? ograniczonyCzasSpaceru = false;
   bool? autodopasowanieTrasySpaceru = false;
-  int liczbaMinut = 1;
+  int liczbaMinut = 10;
   double containerHeight = .075;
-
-  List<Animal> petList = [
-    Animal(1, 'Kubuś', 'Fajny zwierz', DateTime.now(), 'Pies', 15.0,
-        'https://images.pexels.com/photos/2899097/pexels-photo-2899097.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'),
-    Animal(2, 'Nosek', 'Fajny zwierz', DateTime.now(), 'Pies', 15.0,
-        'https://th.bing.com/th/id/OIP.yq2bJZuTLQft8VH64qWKugHaE9?pid=ImgDet&w=3706&h=2480&rs=1'),
-    Animal(3, 'Nosek', 'Fajny zwierz', DateTime.now(), 'Pies', 15.0,
-        'https://th.bing.com/th/id/OIP.yq2bJZuTLQft8VH64qWKugHaE9?pid=ImgDet&w=3706&h=2480&rs=1'),
-    Animal(4, 'Nosek', 'Fajny zwierz', DateTime.now(), 'Pies', 15.0,
-        'https://th.bing.com/th/id/OIP.yq2bJZuTLQft8VH64qWKugHaE9?pid=ImgDet&w=3706&h=2480&rs=1'),
-    Animal(5, 'Nosek', 'Fajny zwierz', DateTime.now(), 'Pies', 15.0,
-        'https://th.bing.com/th/id/OIP.yq2bJZuTLQft8VH64qWKugHaE9?pid=ImgDet&w=3706&h=2480&rs=1'),
-  ];
-  List<bool> wybrany = [true, false, false, false, false];
-
+  late Future length;
   Widget _dialog(BuildContext context) {
     return AlertDialog(
       backgroundColor: Theme.of(context).primaryColor,
@@ -82,103 +88,156 @@ class _WalkStartPage extends State<WalkStartPage> {
     );
   }
 
-  void _scaleDialog() {
-    showGeneralDialog(
-      context: context,
-      pageBuilder: (ctx, a1, a2) {
-        return Container();
-      },
-      transitionBuilder: (ctx, a1, a2, child) {
-        var curve = Curves.easeInOut.transform(a1.value);
-        return Transform.scale(
-          scale: curve,
-          child: _dialog(ctx),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 300),
-    );
+  List<Animal> parseAnimals(String responseBody) {
+    final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
+    return parsed.map<Animal>((json) => Animal.fromJson(json)).toList();
   }
 
+  late List<bool> wybrany = [];
+  List<int> passAnimals = [];
   @override
   Widget build(BuildContext context) {
     List<Widget> walk = [
-      ElevatedButton(
-          onPressed: requestLocationPermission,
-          child: Text('Request location')),
-      SizedBox(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height * .35,
-          child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: petList.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                    onTap: () =>
-                        setState(() => wybrany[index] = !wybrany[index]),
-                    child: Stack(alignment: Alignment.topCenter, children: [
-                      Container(
-                          margin: const EdgeInsets.fromLTRB(10, 40, 10, 5),
-                          width: MediaQuery.of(context).size.width * .4,
-                          decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 31, 104, 60),
-                              border: wybrany[index]
-                                  ? Border.all(
-                                      width: 3, color: Colors.greenAccent)
-                                  : Border.all(width: 2, color: Colors.black),
-                              borderRadius: BorderRadius.circular(
-                                10,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Theme.of(context).focusColor,
-                                    blurRadius: 5)
-                              ]),
-                          child: Padding(
-                              padding: const EdgeInsets.only(top: 45),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 100,
-                                    height: 50,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                        color: Colors.black26,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                            width: 2,
-                                            color:
-                                                Theme.of(context).canvasColor)),
-                                    child: Text(
-                                      petList[index].name,
-                                      style:
-                                          Theme.of(context).textTheme.headline4,
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    width: double.infinity,
-                                    child: Text(
-                                      'Spacery: x\nDziś: 4/5 km',
-                                      style:
-                                          Theme.of(context).textTheme.headline3,
-                                    ),
-                                  ),
-                                ],
-                              ))),
-                      Positioned(
-                          top: .0,
-                          left: .0,
-                          right: .0,
-                          child: Center(
-                            child: CircleAvatar(
-                              backgroundImage:
-                                  NetworkImage(petList[index].image),
-                              radius: 45,
-                            ),
-                          ))
-                    ]));
-              })),
+      FutureBuilder<List<Animal>>(
+          future: future,
+          builder: ((context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                return Center(child: Text('${snapshot.error} occured'));
+              } else if (snapshot.hasData) {
+                // future resolved
+                if (snapshot.data!.isEmpty) {
+                  return Column(children: [
+                    Container(
+                      width: 300,
+                      alignment: Alignment.center,
+                      child: Text(
+                          'Aby korzystać ze spaceru musisz najpierw dodać zwierzaka!'),
+                    )
+                  ]);
+                } else {
+                  return SizedBox(
+                      width: double.infinity,
+                      height: MediaQuery.of(context).size.height * .35,
+                      child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    print(index);
+                                    wybrany[index] = !wybrany[index];
+                                    if (wybrany[index]) {
+                                      // zwierzak wybrany do spaceru
+                                      if (!passAnimals.contains(
+                                          snapshot.data![index].id!)) {
+                                        passAnimals
+                                            .add(snapshot.data![index].id!);
+                                      }
+                                    } else {
+                                      // zwierzak odrzucony od spaceru
+                                      print(
+                                          "Remove value: ${snapshot.data![index].id!}");
+                                      passAnimals
+                                          .remove(snapshot.data![index].id!);
+                                    }
+                                    print(wybrany);
+                                    print(passAnimals);
+                                  });
+                                },
+                                child: Stack(
+                                    alignment: Alignment.topCenter,
+                                    children: [
+                                      Container(
+                                          margin: const EdgeInsets.fromLTRB(
+                                              10, 40, 10, 5),
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              .4,
+                                          decoration: BoxDecoration(
+                                              color: const Color.fromARGB(
+                                                  255, 31, 104, 60),
+                                              border: wybrany[index]
+                                                  ? Border.all(
+                                                      width: 3,
+                                                      color: Colors.greenAccent)
+                                                  : Border.all(
+                                                      width: 2,
+                                                      color: Colors.black),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                10,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                    color: Theme.of(context)
+                                                        .focusColor,
+                                                    blurRadius: 5)
+                                              ]),
+                                          child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 45),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceEvenly,
+                                                children: [
+                                                  Text(
+                                                    snapshot.data![index].sex!,
+                                                    maxLines: 2,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyLarge,
+                                                  ),
+                                                  Container(
+                                                    width: 130,
+                                                    height: 65,
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                        color: Colors.black26,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                        border: Border.all(
+                                                            width: 2,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .canvasColor)),
+                                                    child: Text(
+                                                      snapshot
+                                                          .data![index].name!,
+                                                      maxLines: 2,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .headline4,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ))),
+                                      Positioned(
+                                          top: .0,
+                                          left: .0,
+                                          right: .0,
+                                          child: Center(
+                                            child: CircleAvatar(
+                                              backgroundImage: NetworkImage(
+                                                  snapshot.data![index].photo!),
+                                              radius: 45,
+                                            ),
+                                          ))
+                                    ]));
+                          }));
+                }
+              }
+            }
+            return SizedBox(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height * .35,
+              child: const Center(child: CircularProgressIndicator.adaptive()),
+            );
+          })),
       Container(
         decoration: BoxDecoration(
           color: Theme.of(context).backgroundColor,
@@ -220,7 +279,6 @@ class _WalkStartPage extends State<WalkStartPage> {
                               () => liczbaMinut > 10 ? liczbaMinut-- : null),
                           icon: const Icon(Icons.remove_circle_outline)),
                       Container(
-                        //decoration: ,
                         alignment: Alignment.center,
                         child: Text('$liczbaMinut minut'),
                       ),
@@ -262,67 +320,54 @@ class _WalkStartPage extends State<WalkStartPage> {
       ),
       Center(
         child: SliderButton(
-          dismissible: false,
-          shimmer: false,
+          disable: wybrany.contains(true) ? false : true,
+          shimmer: wybrany.contains(true) ? true : false,
           alignLabel: const Alignment(0.5, 0),
           boxShadow: BoxShadow(
               color: Theme.of(context).backgroundColor, blurRadius: 10),
-          //highlightedColor: Theme.of(context).canvasColor,
           width: MediaQuery.of(context).size.width * 0.8,
           backgroundColor: Theme.of(context).focusColor,
           buttonColor: Theme.of(context).canvasColor,
           action: () {
-            List<int> passAnimals = [];
-            for (var i = 0; i < petList.length; i++) {
-              if (wybrany[i]) {
-                passAnimals.add(petList[i].id);
-              }
-            }
-            if (passAnimals.isEmpty) {
-              // brak zaznaczonych zwierzat - nie mozemy przejsc dalej
-              _scaleDialog();
-            } else {
-              if (autodopasowanieTrasySpaceru == true) {
-                if (ograniczonyCzasSpaceru == true) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => WalkAdjustRoute(
-                                timeInMinutes: liczbaMinut,
-                                animalId: passAnimals,
-                              )));
-                } else {
-                  // czas == false
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => WalkAdjustRoute(
-                                timeInMinutes: null,
-                                animalId: passAnimals,
-                              )));
-                }
+            if (autodopasowanieTrasySpaceru == true) {
+              if (ograniczonyCzasSpaceru == true) {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => WalkAdjustRoute(
+                              timeInMinutes: liczbaMinut,
+                              animalId: passAnimals,
+                            )));
               } else {
-                if (ograniczonyCzasSpaceru == true) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => WalkScreen(
-                                timeInMinutes: liczbaMinut,
-                                animalId: passAnimals,
-                              )));
-                } else {
-                  // czas == false
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => WalkScreen(
-                                timeInMinutes: null,
-                                animalId: passAnimals,
-                              )));
-                }
+                // czas == false
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => WalkAdjustRoute(
+                              timeInMinutes: null,
+                              animalId: passAnimals,
+                            )));
+              }
+            } else {
+              if (ograniczonyCzasSpaceru == true) {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => WalkScreen(
+                              timeInMinutes: liczbaMinut,
+                              animalId: passAnimals,
+                            )));
+              } else {
+                // czas == false
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => WalkScreen(
+                              timeInMinutes: null,
+                              animalId: passAnimals,
+                            )));
               }
             }
-            setState(() {});
           },
           label: Text(
             autodopasowanieTrasySpaceru!
@@ -339,6 +384,7 @@ class _WalkStartPage extends State<WalkStartPage> {
         ),
       ),
     ];
+
     return ScaffoldClass(
         key: UniqueKey(),
         axis: true,

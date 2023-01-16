@@ -1,14 +1,11 @@
+import 'package:animal_app/main.dart';
+import 'package:animal_app/view/Login%20and%20Register/Login.dart';
+import 'package:animal_app/view/Pet/PetDetails.dart';
+import 'package:animal_app/view/User/UserActivity.dart';
 import 'package:animal_app/view/Walk/WalkStartPage.dart';
-import 'package:animal_app/widget/DrawerItem.dart';
-import 'package:animal_app/widget/ScaffoldClass.dart';
-import 'package:animal_app/widget/TimerScreen.dart';
+import 'package:animal_app/utils/ScaffoldClass.dart';
 import 'package:flutter/material.dart';
-
-/*
-Uzupelnic destynacje do kontenerow  Walk + Explore + Gallery + Events
-Uzupelnic destynacje do Drawer - account activity etc
-Destynacja dzwonek, + , lupa
-*/
+import 'UserPets.dart';
 
 class UserStartPage extends StatefulWidget {
   const UserStartPage({Key? key}) : super(key: key);
@@ -26,32 +23,29 @@ class _UserStartPage extends State<UserStartPage> {
         Container(
           width: MediaQuery.of(context).size.width,
           height: 250,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/Dog_training.png'),
-            ),
-          ),
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image:
+                      NetworkImage(user.photo.toString().replaceAll('"', '')))),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
           child: Center(
             child: Text(
-              "Good to see you, _userName!\n You have _coins coins.",
+              "Witaj ${user.login}!\nPosiadasz ${user.coins} monet.",
               style: Theme.of(context).textTheme.headline4,
               textAlign: TextAlign.center,
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+          padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               GestureDetector(
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const WalkStartPage())),
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => WalkStartPage())),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).focusColor,
@@ -64,7 +58,7 @@ class _UserStartPage extends State<UserStartPage> {
                   width: MediaQuery.of(context).size.width * 0.35,
                   child: Center(
                     child: Text(
-                      'Walk',
+                      'Spacer',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headline3,
                     ),
@@ -72,6 +66,8 @@ class _UserStartPage extends State<UserStartPage> {
                 ),
               ),
               GestureDetector(
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const UserPets())),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).focusColor,
@@ -84,7 +80,7 @@ class _UserStartPage extends State<UserStartPage> {
                   width: MediaQuery.of(context).size.width * 0.35,
                   child: Center(
                     child: Text(
-                      'Explore',
+                      'Zwierzaki',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headline3,
                     ),
@@ -112,13 +108,17 @@ class _UserStartPage extends State<UserStartPage> {
                   width: MediaQuery.of(context).size.width * 0.35,
                   child: Center(
                     child: Text(
-                      'Gallery',
+                      'Konto',
                       style: Theme.of(context).textTheme.headline3,
                     ),
                   ),
                 ),
               ),
               GestureDetector(
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const UserActivity())),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).focusColor,
@@ -131,7 +131,7 @@ class _UserStartPage extends State<UserStartPage> {
                   width: MediaQuery.of(context).size.width * 0.35,
                   child: Center(
                     child: Text(
-                      'Events',
+                      'Aktywność',
                       style: Theme.of(context).textTheme.headline3,
                     ),
                   ),

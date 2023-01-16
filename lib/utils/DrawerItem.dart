@@ -1,8 +1,10 @@
 import 'package:animal_app/view/User/UserAccount.dart';
+import 'package:animal_app/view/User/UserActivity.dart';
 import 'package:animal_app/view/User/UserStartPage.dart';
 import 'package:flutter/material.dart';
 
 import '../main.dart';
+import '../view/Login and Register/Login.dart';
 
 class DrawerItem {
   String title;
@@ -21,13 +23,9 @@ class _DrawerBar extends State<DrawerBar> {
   int _index = -1;
   bool _isDisabled = false;
   final _drawerItems = [
-    DrawerItem("Account", Icons.account_circle_sharp),
-    DrawerItem("Activity", Icons.directions_run_sharp),
-    //DrawerItem("Chat", Icons.wechat_sharp),
-    //DrawerItem("Friends", Icons.supervisor_account_sharp),
-    DrawerItem("Settings", Icons.settings_accessibility_sharp),
-    DrawerItem("Information", Icons.info_outline_rounded),
-    DrawerItem("Logout", Icons.logout_sharp),
+    DrawerItem("Konto", Icons.account_circle_sharp),
+    DrawerItem("Aktywność", Icons.directions_run_sharp),
+    DrawerItem("Wyloguj", Icons.logout_sharp),
   ];
   _navigateClearRoute(Widget route) {
     Navigator.pushAndRemoveUntil(
@@ -48,23 +46,11 @@ class _DrawerBar extends State<DrawerBar> {
 
       // Activity
       case 1:
-      //return Start();
+        return _navigateClearRoute(const UserActivity());
 
       // Chat
       case 2:
-      //return Start();
-
-      // Friends
-      case 3:
-      //return Start();
-
-      // Settings
-      case 4:
-      //return Start();
-
-      // Logout
-      case 5:
-        return _navigateClearRoute(const StartPage()); //Login
+        return _navigateClearRoute(const Login());
 
       default:
       //return Start();
@@ -118,7 +104,7 @@ class _DrawerBar extends State<DrawerBar> {
         ),
         width: MediaQuery.of(context).size.width * 2 / 3,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [Column(children: drawerOptions)],
         ),
       ),

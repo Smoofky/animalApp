@@ -5,26 +5,49 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:animal_app/utils/Network.dart';
+import 'package:animal_app/view/Login%20and%20Register/Login.dart';
+import 'package:animal_app/view/Login%20and%20Register/Register.dart';
+import 'package:animal_app/view/User/UserStartPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:http/http.dart' as http;
 
-import 'package:animal_app/main.dart';
+class Mockito extends Mock implements http.Client {}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    //await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('Make Login screen -> press the button -> find warn text',
+      (WidgetTester tester) async {
+    Widget makeTestableWidget({Widget? child}) {
+      return MaterialApp(
+        home: child,
+      );
+    }
+    Login page = const Login();
+    await tester.pumpWidget(makeTestableWidget(child: page));
+    var elevatedButton = find.byType(ElevatedButton);
+    expect(elevatedButton, findsOneWidget);
+    await tester.tap(elevatedButton);
     await tester.pump();
+    expect(find.text("Please enter email"), findsOneWidget);
+    expect(find.text("Please enter password"), findsOneWidget);
+  });
+  testWidgets('Make Register screen -> press button -> find validation errors',
+      (WidgetTester tester) async {
+    Widget makeTestableWidget({Widget? child}) {
+      return MaterialApp(home: child);
+    }
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    Register page = const Register();
+    await tester.pumpWidget(makeTestableWidget(child: page));
+    var elevatedButton = find.byType(ElevatedButton);
+    expect(elevatedButton, findsOneWidget);
+    await tester.tap(elevatedButton);
+    await tester.pumpAndSettle();
+    expect(find.text("Required!"), findsNWidgets(2));
+    expect(find.text("Please enter login"), findsOneWidget);
+    expect(find.text("Please enter email address"), findsOneWidget);
+    expect(find.text("Please enter password"), findsOneWidget);
   });
 }

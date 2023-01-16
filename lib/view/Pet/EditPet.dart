@@ -1,8 +1,8 @@
 import 'dart:io';
-
-import 'package:animal_app/widget/ScaffoldClass.dart';
+import 'package:animal_app/utils/ScaffoldClass.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../model/Animal.dart';
 
 /*
 Dodać form walidację
@@ -12,30 +12,20 @@ Przycisk uaktualnia dane jeżeli są poprawne itp.
 enum ImageSourceType { gallery, camera }
 
 class EditPet extends StatefulWidget {
-  const EditPet({Key? key}) : super(key: key);
-
+  EditPet({Key? key, required this.animal}) : super(key: key);
+  Animal animal;
   @override
   State<EditPet> createState() => _EditPet();
 }
 
 class _EditPet extends State<EditPet> {
-  List<String> userData = [
-    'Adrian',
-    'Nowak',
-    'Żalno',
-    'Adrainno@żal.pl',
-    '21',
-    '777888999',
-    'Mężczyzna'
-  ];
   List<String> userFields = [
-    'imie',
-    'nazwisko',
-    'miejscowość',
-    'email',
-    'wiek',
-    'telefon',
-    'płeć'
+    'imię',
+    'rasę',
+    'płeć',
+    'datę urodzenia',
+    'wagę',
+    'opis',
   ];
   var imagePicker;
   var type;
@@ -43,7 +33,7 @@ class _EditPet extends State<EditPet> {
   @override
   void initState() {
     super.initState();
-    imagePicker = new ImagePicker();
+    imagePicker = ImagePicker();
   }
 
   void pickImage() async {
@@ -61,16 +51,27 @@ class _EditPet extends State<EditPet> {
 
   @override
   Widget build(BuildContext context) {
+    List animalParameters = [];
+    animalParameters.addAll([
+      widget.animal.name,
+      widget.animal.kind,
+      widget.animal.sex,
+      widget.animal.birthDate,
+      widget.animal.weight.toString(),
+      widget.animal.bio,
+    ]);
+
     List<Widget> editableWidgets = [];
     //List<TextEditingController> listOfControllers =
     //    List.generate(userData.length, (i) => TextEditingController());
-    for (var i = 0; i < userData.length; i++) {
+    for (var i = 0; i < 6; i++) {
       //listOfControllers[i].text = userData[i];
+
       editableWidgets.add(
         Container(
           padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
           child: TextFormField(
-            initialValue: userData[i],
+            initialValue: animalParameters[i],
             //controller: listOfControllers[i],
             decoration: InputDecoration(
               labelText: 'Podaj ${userFields[i]}',
@@ -83,13 +84,13 @@ class _EditPet extends State<EditPet> {
     return ScaffoldClass(
         axis: true,
         appBarIcon: false,
-        appBarText: 'Edytuj dane _name',
+        appBarText: widget.animal.name,
         children: [
           GestureDetector(
               onTap: () {
                 AlertDialog alert = AlertDialog(
                   content: Text(
-                    'Ustaw swoje zdjęcie',
+                    'Ustaw zdjęcie',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headline3,
                   ),

@@ -1,7 +1,10 @@
 import 'dart:io';
-import 'package:animal_app/widget/ScaffoldClass.dart';
+import 'package:animal_app/utils/ScaffoldClass.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../../main.dart';
+import '../Login and Register/Login.dart';
 
 /*
 Dodać form walidację
@@ -39,11 +42,13 @@ class _UserEditableProfile extends State<UserEditableProfile> {
   var imagePicker;
   var type;
   var _image;
+  
   @override
-  void initState() {
+  void initState()  {imagePicker = ImagePicker();
+    
     super.initState();
-    imagePicker = new ImagePicker();
   }
+  
 
   void pickImage() async {
     var source = type == ImageSourceType.camera

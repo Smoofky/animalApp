@@ -1,12 +1,10 @@
 import 'package:animal_app/view/Walk/WalkScreen.dart';
 import 'package:animal_app/view/Walk/WalkSettings.dart';
-import 'package:animal_app/widget/ScaffoldClass.dart';
+import 'package:animal_app/utils/ScaffoldClass.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
-import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
-import 'package:google_api_headers/google_api_headers.dart';
 import 'package:slider_button/slider_button.dart';
 
 class WalkAdjustRoute extends StatefulWidget {
@@ -34,12 +32,12 @@ class _WalkAdjustRoute extends State<WalkAdjustRoute> {
   @override
   void initState() {
     _getCurrentLocation();
+    print("Walk Adjust Route animal ID = ${widget.animalId}");
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    print("WaypointCoords na ekranie startu spaceru $waypointCoords");
     List<String> listaMiejsc = [
       'Sklepy',
       'Zwierzęta',
@@ -248,6 +246,7 @@ class _WalkAdjustRoute extends State<WalkAdjustRoute> {
                 width: MediaQuery.of(context).size.width * 0.8,
                 backgroundColor: Theme.of(context).focusColor,
                 buttonColor: Theme.of(context).canvasColor,
+
                 action: () {
                   if (waypointCoords != null) {
                     if (czyKlikniety[4]) {
@@ -294,9 +293,10 @@ class _WalkAdjustRoute extends State<WalkAdjustRoute> {
                                     )));
                       }
                     }
-                  } else
+                  } else {
                     _displayDialog(context,
                         'W autodopasowaniu trasy należy wybrać conajmniej jeden punkt na drodze spaceru (w przypadku trasy od A do A), oraz punkt końcowy (w przypadku trasy od A do B).\nPopraw błędy.');
+                  }
                   setState(() {});
                 },
                 label: Text(

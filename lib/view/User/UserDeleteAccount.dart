@@ -1,6 +1,7 @@
 import 'package:animal_app/main.dart';
 import 'package:flutter/material.dart';
 
+import '../Login and Register/Login.dart';
 import '../Login and Register/PwdResetEmail.dart';
 import '../Login and Register/Register.dart';
 import 'UserStartPage.dart';
@@ -17,6 +18,7 @@ class _UserDeleteAccount extends State<UserDeleteAccount> {
   bool _passwordInVisible = true; //a boolean value
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   AutovalidateMode _autoValidate = AutovalidateMode.disabled;
+
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +106,7 @@ class _UserDeleteAccount extends State<UserDeleteAccount> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (BuildContext context) => StartPage(),
+                              builder: (BuildContext context) => Login(),
                             ),
                             (route) => false,
                           );

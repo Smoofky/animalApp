@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 
-import 'package:animal_app/widget/ScaffoldClass.dart';
+import 'package:animal_app/utils/ScaffoldClass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
 import 'package:geocoding/geocoding.dart';
@@ -131,7 +131,6 @@ class _WalkSettings extends State<WalkSettings> {
         "Lista Stringów $nazwyDoTekstu"); /*
     print("Nazwy isnotEmpty : ${nazwyDoTekstu.contains(null)}");
     print("isNull isEmpty ? - ${isNull}");*/
-   
 
     return ScaffoldClass(
       axis: false,
@@ -146,7 +145,6 @@ class _WalkSettings extends State<WalkSettings> {
           ),
         ],
         if (Address != null) ...[
-          Text('${widget.wybranaTrasa} oraz $Address'),
           Padding(
               padding: const EdgeInsets.all(15),
               child: GestureDetector(

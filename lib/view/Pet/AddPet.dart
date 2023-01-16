@@ -1,14 +1,18 @@
 // ignore_for_file: file_names
 
-import 'package:animal_app/widget/ImagePickerClass.dart';
-import 'package:animal_app/widget/ScaffoldClass.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:date_format/date_format.dart';
+import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
+import 'package:animal_app/utils/ImagePickerClass.dart';
+import 'package:animal_app/utils/ScaffoldClass.dart';
 import 'package:flutter/material.dart';
-
-/*
-Dodać form walidację
-Uzupełnić dane z bazy
-Przycisk uaktualnia dane jeżeli są poprawne itp.
-*/
+import 'package:http/http.dart' as http;
+import '../../main.dart';
+import '../../model/Animal.dart';
+import '../../utils/Network.dart';
 
 class AddPet extends StatefulWidget {
   const AddPet({Key? key}) : super(key: key);
@@ -18,25 +22,38 @@ class AddPet extends StatefulWidget {
 }
 
 class _AddPet extends State<AddPet> {
-  List<String> petData = [
-    'Adrian',
-    'Nowak',
-    'Żalno',
-    'Adrainno@żal.pl',
-    '21',
-    '777888999',
-    'Mężczyzna'
-  ];
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final key = GlobalKey<ScaffoldState>();
+  final TextEditingController nameController = TextEditingController(),
+      weightController = TextEditingController(),
+      heightController = TextEditingController(),
+      bioController = TextEditingController(),
+      searchQueryController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  NetworkUtil netowrk = NetworkUtil();
+  bool _isSearching = true;
+  String _searchText = "";
+  Map<int, String> _searchList = {};
+  bool _onTap = false;
+  int _onTapTextLength = 0;
+  int breedId = -1;
   List<String> petFields = [
     'Wpisz imie...',
-    'Wybierz rasę...',
-    'Wybierz płeć...',
+    'Wybierz rasę z listy ...',
     'Wybierz datę urodzenia...',
     'Podaj wagę...',
+    'Podaj wysokość w centymetrach...',
     'Opowiedz krótko o swoim pupilu...',
   ];
-  String date = "";
+
+  Future fetchBreedList() async {
+    String url = '$ServerIP/breeds';
+    NetworkUtil network = NetworkUtil();
+    return await network.get(url);
+  }
+
   DateTime selectedDate = DateTime.now();
+  var format = DateFormat('yyyy/MM/dd');
   _selectDate(BuildContext context) async {
     final DateTime? selected = await showDatePicker(
       context: context,
@@ -51,449 +68,382 @@ class _AddPet extends State<AddPet> {
     }
   }
 
+  Future createPet({body}) async {
+    String url = '$ServerIP/animal/${user.id}/add';
+    NetworkUtil network = NetworkUtil();
+    return await network.post(url,
+        body: json.encode(body), headers: {"content-type": "application/json"});
+  }
+
+  Future saveAnimalImage(int id, String file) async {
+    String? token = await storage.read(key: 'jwt');
+    final String jwt = token!.replaceAll('"', '');
+    String url = '$ServerIP/animal/$id/animal-image-change';
+    NetworkUtil network = NetworkUtil();
+    var res = await network.multipartFunc(url, file, jwt);
+    return res;
+  }
+
+  String dropdownSexopt = 'Pies';
+
+  _AddPet() {
+    searchQueryController.addListener(() {
+      if (searchQueryController.text.isEmpty) {
+        setState(() {
+          _isSearching = false;
+          _searchText = "";
+          _searchList = {};
+        });
+      } else {
+        setState(() {
+          _isSearching = true;
+          _searchText = searchQueryController.text;
+
+          _onTap = _onTapTextLength == _searchText.length;
+        });
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _isSearching = false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<Widget> editableWidgets = [];
+    var style = Theme.of(context).textTheme;
     List<String> sexOpt = ['Pies', 'Suczka'];
-    List<String> breedOpt = [
-      'Chart afgański',
-      'Chart perski - saluki',
-      'Chart rosyjski borzoj',
-      // 'Sekcja 2 - Charty szorstkowłose',
-      'Chart szkocki',
-      'Wilczarz irlandzki',
-      // 'Sekcja 3 - Charty krótkowłose',
-      'Chart afrykański - azawakh',
-      'Chart arabski - sloughi',
-      'Chart hiszpański',
-      'Chart polski',
-      'Chart węgierski',
-      'Charcik włoski',
-      'Greyhound',
-      'Whippet',
-      'Bichon frise',
-      'Bolończyk',
-      'Hawańczyk',
-      'Maltańczyk',
-      'Coton de tuléar',
-      'Lwi piesek',
-      // Sekcja 2 – Pudle
-      'Pudel duży',
-      'Pudel miniaturowy',
-      'Pudel średni',
-      'Pudel toy',
-      //Sekcja 3 – Małe psy belgijskie
-      //3.1. Gryfony
-      'Gryfonik belgijski ',
-      'Gryfonik brukselski',
-      //3.2. Brabantczyk
-      'Brabantczyk',
-      //Sekcja 4 – Psy bezwłose
-      'Chiński grzywacz',
-      //Sekcja 5 – Rasy tybetańskie
-      'Lhasa apso',
-      'Shih tzu',
-      'Spaniel tybetański',
-      'Terier tybetański',
-      //Sekcja 6 - Chihuahua
-      'Chihuahua',
-      //Sekcja 7 - Angielskie spaniele miniaturowe
-      'Cavalier king charles spaniel',
-      'King charles spaniel',
-      //Sekcja 8 - Chin japoński i Pekińczyk
-      'Chin japoński',
-      'Pekińczyk',
-      //Sekcja 9 - Spaniele kontynentalne miniaturowe i Rosyjski toy
-      'Rosyjski toy',
-      'Spaniel kontynentalny miniaturowy',
-      //Sekcja 10 - Kromfohrländer
-      'Kromfohrländer',
-      //Sekcja 11 - Małe molos
-      'Boston terrier',
-      'Buldog francuski',
-      'Mops',
-      'Amerykański spaniel dowodny',
-      'Barbet',
-      'Fryzyjski pies dowodny',
-      'Hiszpański pies dowodny',
-      'Irlandzki spaniel dowodny',
-      'Lagotto romagnolo',
-      'Portugalski pies dowodny',
-      'Clumber spaniel',
-      'Cocker spaniel amerykański',
-      'Cocker spaniel angielski',
-      'Field spaniel',
-      'Kooikerhondje',
-      'Płochacz niemiecki',
-      'Springer spaniel angielski',
-      'Springer spaniel walijski',
-      'Sussex spaniel',
-      'Chesapeake bay retriever',
-      'Curly coated retriever',
-      'Flat coated retriever',
-      'Golden retriever',
-      'Labrador retriever',
-      'Nova scotia duck tolling retriever',
-      'Seter angielski',
-      'Seter irlandzki',
-      'Seter irlandzki czerwono-biały',
-      'Seter szkocki (gordon)',
-      'Pointer',
-      'Gryfon korthalsa',
-      'Wyżeł czeski szorstkowłosy – fousek',
-      'Wyżeł włoski szorstkowłosy',
-      'Duży münsterländer',
-      'Drentse Patrijshond',
-      'Epagneul bleu de picardie',
-      'Epagneul de pond-audemer',
-      'Mały münsterländer',
-      'Spaniel bretoński',
-      'Spaniel francuski',
-      'Spaniel pikardyjski',
-      'Wyżeł fryzyjski',
-      'Wyżeł niemiecki długowłosy',
-      'Braque d’auvergne',
-      'Braque de l’ariege',
-      'Braque du bourbonnais',
-      'Braque saint-germain',
-      'Pudelpointer',
-      'Wyżeł duński',
-      'Wyżeł gaskoński',
-      'Wyżeł hiszpański z Burgos',
-      'Wyżeł niemiecki krótkowłosy',
-      'Wyżeł niemiecki ostrowłosy',
-      'Wyżeł niemiecki szorstkowłosy',
-      'Wyżeł pirenejski',
-      'Wyżeł weimarski',
-      '• Wyżeł weimarski długowłosy',
-      '• Wyżeł weimarski krótkowłosy',
-      'Wyżeł węgierski krótkowłosy',
-      'Wyżeł węgierski szorstkowłosy',
-      'Wyżeł włoski krótkowłosy',
-      'Wyżeł portugalski',
-      'Wyżeł słowacki szorstkowłosy',
-      'Dalmatyńczyk',
-      'Rhodesian ridgeback',
-      'Alpejski gończy krótkonożny',
-      'Posokowiec bawarski',
-      'Posokowiec hanowerski',
-      'Westfalski gończy krótkonożny',
-      'Basset artezyjsko-normandzki',
-      'Basset bretoński',
-      'Basset gaskoński',
-      'Basset hound',
-      'Beagle',
-      'Drever',
-      'Gończy niemiecki',
-      'Grand basset griffon vendéen',
-      'Petit basset griffon vendéen',
-      'Gończy szwajcarski krótkonożny',
-      'Ariégeois',
-      'Beagle-harrier',
-      'Chien d’artois',
-      'Czarnogórski gończy górski',
-      'Dunker',
-      'Gończy austriacki',
-      'Gończy bośniacki szorstkowłosy barak',
-      'Gończy chorwacki',
-      'Gończy fiński',
-      'Gończy grecki',
-      'Gończy hamiltona',
-      'Gończy hiszpański',
-      'Gończy istryjski krótkowłosy',
-      'Gończy istryjski szorstkowłosy',
-      'Gończy polski',
-      'Gończy schillera',
-      'Gończy serbski',
-      'Gończy serbski trójkolorowy',
-      'Gończy słowacki',
-      'Gończy smalandzki',
-      'Gończy styryjski',
-      'Gończy szwajcarski',
-      'Gończy berneński',
-      'Gończy z Jury',
-      'Gończy lucerneński',
-      'Gończy ze Schwyz',
-      'Gończy tyrolski',
-      'Gończy węgierski',
-      'Gończy włoski',
-      'Gończy włoski krótkowłosy',
-      'Gończy włoski szorstkowłosy',
-      'Haldenstøvare',
-      'Harrier',
-      'Hygenhund',
-      'Mały gończy anglo-francuski',
-      'Mały gończy gaskoński',
-      'Porcelaine',
-      'Szorstkowłosy gończy bretoński',
-      'Szorstkowłosy gończy gaskoński',
-      'Szorstkowłosy gończy wandejski',
-      'Szorstkowłosy gończy z Nivernais',
-      'Billy',
-      'Black and tan coonhound',
-      'Bloodhound',
-      'Duży gończy anglo-francuski biało-czarny',
-      'Duży gończy anglo-francuski biało-pomarańczowy',
-      'Duży gończy anglo-francuski trójkolorowy',
-      'Duży gończy gaskoński',
-      'Foxhound amerykański',
-      'Foxhound angielski',
-      'Gascon saintongeols',
-      'Grand griffon vendéen',
-      'Gończy francuski biało-czarny',
-      'Gończy francuski biało-pomarańczowy',
-      'Gończy francuski trójkolorowy',
-      'Otterhound',
-      'Ogar polski',
 
-      'Poitevin',
-      'Rastreador Brasileiro',
-      'Taiwan dog',
-      'Thai ridgeback',
-      'Cirneco dell’Etna',
-      'Podenco kanaryjski',
-      'Podenco z Ibizy',
-      'Podengo portugalski',
-      'Basenji',
-      'Canaan dog',
-      'Pies faraona',
-      'Nagi pies meksykański',
-      'Nagi pies peruwiański',
-      'Akita',
-      'Akita amerykańska',
-      'Chow chow',
-      'Eurasier',
-      'Hokkaïdo',
-      'Jindo',
-      'Kai',
-      'Kishu',
-      'Shiba',
-      'Shikoku',
-      'Szpic japoński',
-      'Thai bangkaew',
-      'Szpic miniaturowy (pomeranian)',
-      'Szpic niemiecki duży',
-      'Szpic niemiecki średni',
-      'Szpic niemiecki mały',
-      'Szpic wilczy',
-      'Szpic włoski',
-      'Islandzki szpic pasterski',
-      'Lapinporokoira',
-      'Norsk buhund',
-      'Suomenlapinkoira',
-      'Svensk lapphund',
-      'Västgötaspets',
-      'Elkhund czarny',
-      'Elkhund szary',
-      'Jämthund',
-      'Karelski pies na niedźwiedzie',
-      'Łajka rosyjsko-europejska',
-      'Łajka wschodniosyberyjska',
-      'Łajka zachodniosyberyjska',
-      'Norrbottenspitz',
-      'Norsk lundehund',
-      'Szpic fiński',
-      'Alaskan malamute',
-      'Canadian Eskimo Dog',
-      'Pies grenlandzki',
-      'Samojed',
-      'Siberian husky',
-      'Jamnik standardowy',
-      'Jamnik długowłosy standardowy',
-      'Jamnik krótkowłosy standardowy',
-      'Jamnik szorstkowłosy standardowy',
-      'Jamnik króliczy',
-      'Jamnik krótkowłosy króliczy',
-      'Jamnik długowłosy króliczy',
-      'Jamnik szorstkowłosy króliczy',
-      'Jamnik miniaturowy',
-      'Jamnik krótkowłosy miniaturowy',
-      'Jamnik długowłosy miniaturowy',
-      'Jamnik szorstkowłosy miniaturowy',
-      'Australian silky terrier',
-      'English toy terrier',
-      'Yorkshire terrier',
-      'American staffordshire terrier',
-      'Bulterier',
-      'Bulterier miniaturowy',
-      'Staffordshire bull terrier',
-      'Cairn terrier',
-      'Dandie dinmont terrier',
-      'Jack russell terrier',
-      'Norfolk terrier',
-      'Norwich terrier',
-      'Sealyham terrier',
-      'Skye terrier',
-      'Terier australijski',
-      'Terier czeski',
-      'Terier japoński',
-      'Terier szkocki',
-      'West highland white terrier',
-      'Airedale terrier',
-      'Bedlington terrier',
-      'Border terrier',
-      'Foksterier krótkowłosy',
-      'Foksterier szorstkowłosy',
-      'Irish glen of imaal terrier',
-      'Irish soft coated wheaten terrier',
-      'Kerry blue terrier',
-      'Lakeland terrier',
-      'Manchester terrier',
-      'Niemiecki terier myśliwski',
-      'Parson russell terrier',
-      'Terier brazylijski',
-      'Terier irlandzki',
-      'Terier walijski',
-      'Appenzeller',
-      'Berneński pies pasterski',
-      'Duży szwajcarski pies pasterski',
-      'Entlebucher',
-      'Aidi',
-      'Anatolian',
-      'Bernardyn',
-      'Cão da serra da estrela',
-      'Cão de castro laboreiro',
-      'Hovawart',
-      'Sarplaninac',
-      'Kraski owczarek',
-      'Landseer (typ kontynentalno-europejski)',
-      'Leonberger',
-      'Mastif hiszpański',
-      'Mastif pirenejski',
-      'Mastif tybetański',
-      'Nowofundland',
-      'Owczarek kaukaski',
-      'Owczarek środkowoazjatycki',
-      'Pies pasterski z Bukowiny',
-      'Pirenejski pies górski',
-      'Rafeiro do alentejo',
-      'Tornjak',
-      'Bokser',
-      'Buldog angielski',
-      'Bullmastif',
-      'Broholmer',
-      'Cane corso italiano',
-      'Cão fila de são miguel',
-      'Cimarrón uruguayo',
-      'Dog argentyński',
-      'Dog kanaryjski',
-      'Dog niemiecki',
-      'Dog z Majorki',
-      'Dogue de bordeaux',
-      'Fila brasileiro',
-      'Mastif angielski',
-      'Mastif neapolitański',
-      'Rottweiler',
-      'Shar pei',
-      'Tosa',
-      'Czarny terier rosyjski',
-      'Hollandse smoushond',
-      'Sznaucer olbrzym',
-      'Sznaucer miniaturowy',
-      'Sznaucer średni',
-      'Doberman',
-      'Duńsko-szwedzki pies wiejski',
-      'Pinczer austriacki',
-      'Pinczer małpi',
-      'Pinczer miniaturowy',
-      'Pinczer średni',
-      'Australian cattle dog',
-      'Bouvier des Ardennes',
-      'Bouvier des Flandres',
-      'Bearded collie',
-      'Bergamasco',
-      'Biały owczarek szwajcarski',
-      'Border collie',
-      'Czuwacz słowacki',
-      'Komondor',
-      'Kuvasz',
-      'Maremmano-abruzzese',
-      'Mudi',
-      'Schapendoes',
-      'Owczarek australijski (typ amerykański)',
-      'Owczarek australijski kelpie',
-      'Owczarek belgijski',
-      'Owczarek chorwacki',
-      'Owczarek francuski beauceron',
-      'Owczarek francuski briard',
-      'Owczarek holenderski',
-      'Owczarek kataloński',
-      'Owczarek niemiecki',
-      'Owczarek pikardyjski',
-      'Owczarek pirenejski długowłosy',
-      'Owczarek pirenejski o gładkiej kufie',
-      'Owczarek południoworosyjski jużak',
-      'Owczarek portugalski',
-      'Owczarek rumuński karpatin',
-      'Owczarek rumuński mioritic',
-      'Owczarek staroangielski bobtail',
-      'Owczarek szetlandzki',
-      'Owczarek szkocki długowłosy',
-      'Owczarek szkocki krótkowłosy',
-      'Owczarek z Majorki',
-      'Polski owczarek nizinny',
-      'Polski owczarek podhalański',
-      'Puli',
-      'Pumi',
-      'Saarlooswolfhond',
-      'Schipperke',
-      'Welsh corgi cardigan',
-      'Welsh corgi pembroke',
-      'Wilczak czechosłowacki',
-    ];
-    for (var i = 0; i < petFields.length; i++) {
-      editableWidgets.add(i == 1 || i == 2
-          ? Container(
-              padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-              child: Autocomplete<String>(
-                  optionsBuilder: (TextEditingValue textEditingValue) {
-                    if (textEditingValue.text == '') {
-                      return const Iterable<String>.empty();
-                    }
-                    List<String> opt;
-                    i == 1 ? opt = breedOpt : opt = sexOpt;
-                    return opt.where(
-                      (String option) {
-                        return option
-                            .toLowerCase()
-                            .contains(textEditingValue.text.toLowerCase());
-                      },
-                    );
-                  },
-                  displayStringForOption: (String option) => option,
-                  fieldViewBuilder: (context, textEditingController, focusNode,
-                      onFieldSubmitted) {
-                    return TextFormField(
-                      //keyboardType: TextInputType.multiline,
-                      //maxLines: 6,
-                      //maxLength: 255,
-                      focusNode: focusNode,
-                      controller: textEditingController,
-                      decoration: InputDecoration(
-                        labelText: petFields[i],
-                      ),
-                    );
-                  }),
-            )
-          : i == 3
-              ? ElevatedButton(
-                  onPressed: () => _selectDate(context),
-                  child: Text('Podaj datę urodzin twojego pupila!'))
-              : Text('datej'));
-    }
     return ScaffoldClass(
+        resizeToAvoidInset: true,
+        key: key,
         appBarText: 'Dodaj nowego pupila',
         appBarIcon: false,
         axis: true,
         children: [
-          const ImagePickerClass(),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: editableWidgets,
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: ImagePickerClass(),
           ),
+          Form(
+              key: _formKey,
+              child: Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: TextFormField(
+                            controller: nameController,
+                            decoration: InputDecoration(hintText: petFields[0]),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return "Uzupełnij pole...";
+                              }
+                              return null;
+                            },
+                          )),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Wybierz płeć swojego pupila   "),
+                          Container(
+                              padding: const EdgeInsets.fromLTRB(20, 15, 20, 5),
+                              child: DropdownButton<String>(
+                                value: dropdownSexopt,
+                                dropdownColor:
+                                    Theme.of(context).bottomAppBarColor,
+                                icon: const Icon(Icons.arrow_downward),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    dropdownSexopt = newValue!;
+                                  });
+                                },
+                                items: <String>[
+                                  'Pies',
+                                  'Suczka'
+                                ].map<DropdownMenuItem<String>>((String val) {
+                                  return DropdownMenuItem<String>(
+                                    value: val,
+                                    child: Text(
+                                      val,
+                                      style:
+                                          Theme.of(context).textTheme.headline4,
+                                    ),
+                                  );
+                                }).toList(),
+                              )),
+                        ],
+                      ),
+                      Stack(
+                        children: [
+                          TextFormField(
+                            controller: searchQueryController,
+                            focusNode: _focusNode,
+                            onFieldSubmitted: (String value) {
+                              setState(() {
+                                searchQueryController.text = value;
+                                _onTap = true;
+                              });
+                              print(searchQueryController.text);
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              hintText: petFields[1],
+                            ),
+                          ),
+                          Container(
+                              alignment: Alignment.topCenter,
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 50, 20, 10),
+//
+                              child: _isSearching && (!_onTap)
+                                  ? getFutureWidget()
+                                  : null),
+                        ],
+                      ),
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 15, 20, 5),
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text("Wybierz datę urodzenia     "),
+                                Container(
+                                    child: ElevatedButton(
+                                        onPressed: () {
+                                          _selectDate(context);
+                                        },
+                                        child: selectedDate != DateTime.now()
+                                            ? Text(formatDate(selectedDate,
+                                                [yyyy, '-', mm, '-', dd]))
+                                            : const Text(
+                                                "Podaj datę urodzenia...")))
+                              ])),
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: TextFormField(
+                            keyboardType: TextInputType.number,
+                            controller: weightController,
+                            decoration: InputDecoration(hintText: petFields[3]),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return "Uzupełnij pole...";
+                              } else if (double.tryParse(value) == null) {
+                                return "Podaj prawidłową wagę!";
+                              }
+                              return null;
+                            },
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: TextFormField(
+                            keyboardType: TextInputType.number,
+                            controller: heightController,
+                            decoration: InputDecoration(hintText: petFields[4]),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return "Uzupełnij pole...";
+                              } else if (double.tryParse(value) == null) {
+                                return "Podaj prawidłową wysokość!";
+                              }
+                              return null;
+                            },
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: TextFormField(
+                            controller: bioController,
+                            decoration: InputDecoration(hintText: petFields[5]),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return "Uzupełnij pole...";
+                              }
+                              return null;
+                            },
+                          )),
+                      Container(
+                          height: 70,
+                          width: 150,
+                          padding: const EdgeInsets.all(15),
+                          child: ElevatedButton(
+                              child: Text(
+                                'Dodaj',
+                                style: style.headline4,
+                              ),
+                              onPressed: () async {
+                                _searchList.forEach((key, value) {
+                                  if (value == searchQueryController.text) {
+                                    breedId = key;
+                                  }
+                                });
+                                print("Breed ID = $breedId");
+                                if (_formKey.currentState!.validate() &&
+                                    breedId >= 0) {
+                                  Animal animal = Animal(
+                                    name: nameController.text,
+                                    sex: dropdownSexopt,
+                                    birthDate: formatDate(
+                                        selectedDate, [yyyy, '-', mm, '-', dd]),
+                                    weight: double.parse(weightController.text),
+                                    height: double.parse(heightController.text),
+                                    bio: bioController.text,
+                                    breed: breedId,
+                                  );
+
+                                  var response =
+                                      await createPet(body: animal.toMap());
+                                  var animalId = response['Added animal']['id'];
+                                  if (animalId != null) {
+                                    // dodano zwierzaka
+                                    if (animalImage != '') {
+                                      // dolaczono zdjecie - update rekordu dodanego zwierzaka
+                                      var response = await saveAnimalImage(
+                                          animalId, animalImage);
+                                      if (response[
+                                              'Updated animal\'s picture.'] ==
+                                          null) {
+                                        AwesomeDialog successDialog =
+                                            AwesomeDialog(
+                                          dialogBackgroundColor:
+                                              Theme.of(context).disabledColor,
+                                          context: context,
+                                          dialogType: DialogType.success,
+                                          animType: AnimType.scale,
+                                          dismissOnTouchOutside: false,
+                                          body: const Text(
+                                              'Sukces! Stworzono profil zwierzaka!'),
+                                          btnOkText: 'Ok',
+                                          btnOkOnPress: () {
+                                            Navigator.pop(context);
+                                          },
+                                        );
+                                        await successDialog.show();
+                                      }
+                                    } else {
+                                      AwesomeDialog successDialog =
+                                          AwesomeDialog(
+                                        dialogBackgroundColor:
+                                            Theme.of(context).disabledColor,
+                                        context: context,
+                                        dialogType: DialogType.success,
+                                        animType: AnimType.scale,
+                                        dismissOnTouchOutside: false,
+                                        body: const Text(
+                                            'Sukces! Stworzono profil zwierzaka!'),
+                                        btnOkText: 'Ok',
+                                        btnOkOnPress: () {
+                                          Navigator.pop(context);
+                                        },
+                                      );
+                                      await successDialog.show();
+                                    }
+                                  } else {
+                                    AwesomeDialog failureDialog = AwesomeDialog(
+                                      dialogBackgroundColor:
+                                          Theme.of(context).disabledColor,
+                                      context: context,
+                                      dialogType: DialogType.success,
+                                      animType: AnimType.scale,
+                                      dismissOnTouchOutside: false,
+                                      body: const Text('Coś poszło nie tak :('),
+                                      btnOkText: 'Ok',
+                                      btnOkOnPress: () {
+                                        Navigator.pop(context);
+                                      },
+                                    );
+                                    await failureDialog.show();
+                                  }
+                                }
+                              }))
+                    ],
+                  ),
+                ),
+              ))
         ]);
+  }
+
+  ListTile _getListTile(String suggestedPhrase) {
+    return ListTile(
+      dense: true,
+      title: Text(
+        suggestedPhrase,
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
+      onTap: () {
+        setState(() {
+          _onTap = true;
+          _isSearching = false;
+          _onTapTextLength = suggestedPhrase.length;
+          searchQueryController.text = suggestedPhrase;
+        });
+        searchQueryController.selection = TextSelection.fromPosition(
+            TextPosition(offset: suggestedPhrase.length));
+      },
+    );
+  }
+
+  Widget getFutureWidget() {
+    return FutureBuilder(
+        future: _buildSearchList(),
+        initialData: const <ListTile>[],
+        builder:
+            (BuildContext context, AsyncSnapshot<List<ListTile>> childItems) {
+          return Container(
+            color: Colors.white,
+            width: MediaQuery.of(context).size.width,
+            height: 300,
+            child: ListView(
+//            padding: new EdgeInsets.only(left: 50.0),
+              children: childItems.data != null
+                  ? ListTile.divideTiles(
+                          context: context,
+                          tiles: getChildren(childItems) as Iterable<Widget>)
+                      .toList()
+                  : [],
+            ),
+          );
+        });
+  }
+
+  List<ListTile>? getChildren(AsyncSnapshot<List<ListTile>> childItems) {
+    if (_onTap && _searchText.length != _onTapTextLength) _onTap = false;
+    List<ListTile>? childrenList =
+        _isSearching && !_onTap ? childItems.data : [];
+    return childrenList;
+  }
+
+  Future<List<ListTile>> _buildSearchList() async {
+    if (_searchText.isEmpty) {
+      _searchList = {};
+      return [];
+    } else {
+      _searchList = await _getSuggestion(_searchText) ?? {};
+
+      List<ListTile> childItems = [];
+      _searchList.forEach((key, value) {
+        childItems.add(_getListTile(value));
+      });
+
+      return childItems;
+    }
+  }
+
+  Future<Map<int, String>?> _getSuggestion(String hintText) async {
+    String url = "$ServerIP/breeds";
+    var response = await http.get(Uri.parse(url));
+    var decode = json.decode(utf8.decode(response.bodyBytes));
+    if (response.statusCode != 201 || decode.isEmpty) {
+      return null;
+    }
+    Map<int, String> suggestedWords = {};
+    print(response.body);
+    for (var f in decode['All breeds']) {
+      if (f['name'].toString().toLowerCase().contains(hintText)) {
+        suggestedWords.addAll({f['id']: f['name']});
+      }
+    }
+    return suggestedWords;
   }
 }

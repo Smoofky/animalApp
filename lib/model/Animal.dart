@@ -1,55 +1,65 @@
-import 'dart:ffi';
-
-import 'package:flutter/material.dart';
-import '../main.dart';
+import 'dart:convert';
 
 class Animal {
-  String _name;
-  String _description;
-  DateTime _birth_date;
-  String _sex;
-  double _weight;
-  String _image;
-  int id;
+  int? id;
+  String? name;
+  String? birthDate;
+  String? kind;
+  double? height;
+  String? bio;
+  String? sex;
+  double? weight;
+  String? photo;
   // Pin pins;
-  // Breed breed;
+  int? breed;
 
-  // Constructor
+  Animal(
+      {this.id,
+      this.name,
+      this.bio,
+      this.birthDate,
+      this.sex,
+      this.weight,
+      this.photo,
+      this.height,
+      this.kind,
+      this.breed});
 
-  Animal(this.id, this._name, this._description, this._birth_date, this._sex,
-      this._weight, this._image);
-
-  // Setters & Getters
-
-  String get name => _name;
-  set name(String name) {
-    _name = name;
+  factory Animal.fromJson(Map json) {
+    return Animal(
+        id: json['id'],
+        name: json['name'],
+        bio: json['bio'],
+        birthDate: json['birth_date'],
+        sex: json['sex'],
+        weight: json['weight'],
+        photo: json['photo_url'],
+        height: json['height'],
+        kind: json['kind'],
+        breed: json['breed_id']);
   }
 
-  String get image => _image;
-  set image(String image) {
-    _image = image;
+  Map toMap() {
+    var map = {};
+    //map["id"] = "string";
+    map["name"] = name;
+    map["bio"] = bio;
+    map["birth_date"] = birthDate;
+    map["sex"] = sex;
+    map["weight"] = weight;
+    map["photo"] = photo;
+    map["height"] = height;
+    map["kind"] = kind;
+    map["breed_id"] = breed;
+
+    return map;
   }
 
-  double get weight => _weight;
-  set weight(double weight) {
-    _weight = weight;
-  }
-
-  String get sex => _sex;
-  set sex(String sex) {
-    _sex = sex;
-  }
-
-  DateTime get birth_date => _birth_date;
-  set birth_date(DateTime birthDate) {
-    _birth_date = birthDate;
-  }
-
-  String get description => _description;
-  set description(String description) {
-    _description = description;
-  }
-
-  // Setters & Getters
+/*
+  Map toMapAdd() {
+    var map = {};
+    map["email"] = email;
+    map["password"] = password;
+    return map;
+  }*/
 }

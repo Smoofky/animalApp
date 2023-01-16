@@ -1,15 +1,16 @@
-import 'package:animal_app/widget/ListTileClass.dart';
+import 'package:animal_app/utils/ListTileClass.dart';
 import 'package:flutter/material.dart';
-import '../../widget/ScaffoldClass.dart';
+import '../../main.dart';
+import '../../utils/ScaffoldClass.dart';
 
-class MyPets extends StatefulWidget {
-  const MyPets({Key? key}) : super(key: key);
+class UserPets extends StatefulWidget {
+  const UserPets({Key? key}) : super(key: key);
 
   @override
-  State<MyPets> createState() => _MyPets();
+  State<UserPets> createState() => _UserPets();
 }
 
-class _MyPets extends State<MyPets> {
+class _UserPets extends State<UserPets> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldClass(
@@ -17,19 +18,22 @@ class _MyPets extends State<MyPets> {
       appBarIcon: false,
       appBarText: 'Podopieczni',
       children: [
-        Container(
-          height: 150,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/Dog_training.png'),
-            ),
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            height: 150,
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: NetworkImage(
+                        user.photo.toString().replaceAll('"', '')))),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 20, 0, 20),
           child: Center(
             child: Text(
-              'tu username',
+              user.login.toString(),
               style: Theme.of(context).textTheme.headline4,
               textAlign: TextAlign.center,
             ),
@@ -43,7 +47,7 @@ class _MyPets extends State<MyPets> {
             textAlign: TextAlign.center,
           ),
         ),
-        const ListTileClass(),
+        ListTileClass(),
       ],
     );
   }
