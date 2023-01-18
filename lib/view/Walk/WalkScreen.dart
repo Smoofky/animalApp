@@ -263,7 +263,6 @@ class _WalkScreen extends State<WalkScreen> {
     if (adjustRoute) {
       if (coords[2] == const LatLng(0.0, 0.0)) {
         // trasa A -> A
-        // trasa A -> A
         setState(() {
           _createPolylines(
               _currentPosition.latitude,
@@ -299,18 +298,16 @@ class _WalkScreen extends State<WalkScreen> {
     }
   }
 
-  _createPolylines(
-      double startLat, double startLng, double endLat, double endLng) async {
+  _createPolylines(double startLat, double startLng, double endLat, double endLng) async {
     polylinePoints = PolylinePoints();
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        'AIzaSyDDyBb0N9_jthBS99PRJcT6CjFV2TI9J5E',
+        'API KEY HERE',
         PointLatLng(startLat, startLng),
         PointLatLng(endLat, endLng),
         travelMode: TravelMode.walking,
         wayPoints: adjustRoute ? waypoints : []);
 
     if (adjustRoute) {
-      // ignore: avoid_function_literals_in_foreach_calls
       result.points.forEach((PointLatLng point) {
         polylineCoords.add(LatLng(point.latitude, point.longitude));
       });

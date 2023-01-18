@@ -81,7 +81,7 @@ class _WalkStatistic extends State<WalkStatistic> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Padding(
-                padding: EdgeInsets.all(30),
+                padding: EdgeInsets.all(10),
                 child: Center(
                   child: Image.memory(
                     widget.image!,
@@ -152,14 +152,13 @@ class _WalkStatistic extends State<WalkStatistic> {
                   ),
                 ]),
               ),
-              Column(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Padding(
                       padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                       child: ElevatedButton(
                         onPressed: (() async {
-                          
                           Walk walk = Walk(
                             animalIdList: widget.animalIdList,
                             coins: int.parse(

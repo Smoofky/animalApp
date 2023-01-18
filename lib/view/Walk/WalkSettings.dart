@@ -45,7 +45,7 @@ class _WalkSettings extends State<WalkSettings> {
   String? punktDocelowy;
   final int maximumDistance = 10000;
   String? Address;
-  String apiKey = 'AIzaSyDDyBb0N9_jthBS99PRJcT6CjFV2TI9J5E';
+  String apiKey = 'API KEY HERE';
   Map<String, List<String>> type = {
     "Sklepy": ['bakery|drugstore|shopping_mall|florist|supermarket'],
     "Zwierzęta": ['pet_store|veterinary_care'],

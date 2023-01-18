@@ -24,13 +24,14 @@ void main() {
         home: child,
       );
     }
+
     Login page = const Login();
     await tester.pumpWidget(makeTestableWidget(child: page));
     var elevatedButton = find.byType(ElevatedButton);
     expect(elevatedButton, findsOneWidget);
     await tester.tap(elevatedButton);
     await tester.pump();
-    expect(find.text("Please enter email"), findsOneWidget);
+    expect(find.text("Please enter valid email address"), findsOneWidget);
     expect(find.text("Please enter password"), findsOneWidget);
   });
   testWidgets('Make Register screen -> press button -> find validation errors',

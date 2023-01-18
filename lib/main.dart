@@ -7,6 +7,15 @@ import 'dart:convert'; // For jsonDecode
 import 'model/User.dart';
 import 'view/Login and Register/Login.dart';
 
+
+/*
+
+Uwaga!
+Klucz API użyty do map google został usunięty z projektu!
+
+*/ 
+
+
 const ServerIP = 'http://192.168.0.129:8000';
 const storage = FlutterSecureStorage();
 User user = User();
