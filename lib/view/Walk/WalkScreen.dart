@@ -301,7 +301,7 @@ class _WalkScreen extends State<WalkScreen> {
   _createPolylines(double startLat, double startLng, double endLat, double endLng) async {
     polylinePoints = PolylinePoints();
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        'API KEY HERE',
+        'xxxx',
         PointLatLng(startLat, startLng),
         PointLatLng(endLat, endLng),
         travelMode: TravelMode.walking,
