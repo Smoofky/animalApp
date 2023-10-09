@@ -13,7 +13,8 @@ Mówiąc w skrócie, użytkownik może dodać zwierzę do aplikacji, a następni
    ## 1. Rejestracja użytkownika
 Rejestracja w aplikacji wymaga od użytkownika podania takich danych jak: email, login i hasło. Należy dodatkowo wyrazić zgodę na przetwarzanie danych osobowych oraz zaakceptować regulamin aplikacji. 
 
-<img src="https://github.com/Smoofky/animalApp/assets/141446663/d5e181cd-44bd-4bbb-a35d-881a04807362" width="200" height="420"/>
+<img src="https://github.com/Smoofky/animalApp/assets/141446663/7a147ec8-14b3-471a-8065-e808999d6fdc" width="200" height="420"/>
+
 
    ## 2. Logowanie się w aplikacji
 Należy wypełnić formularz logowania, wpisując login i hasło. Następnie po wciśnięciu przycisku ‘Zaloguj się’ odbywa się walidacja podanych danych. Po poprawnym wypełnieniu, użytkownik zostaje przekierowany na stronę główną aplikacji.
